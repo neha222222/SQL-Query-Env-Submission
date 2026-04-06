@@ -1,0 +1,10 @@
+name: sql_query_env
+version: "1.0.0"
+description: "SQL Query Environment - Train AI agents to write correct SQL queries against a relational database. Features 9 graded tasks across 3 difficulty levels (easy, medium, hard) covering single-table queries, JOINs, aggregation, subqueries, and more."
+author: "neha222222"
+tags:
+  - sql
+  - database
+  - natural-language-to-sql
+  - text-to-sql
+  - reinforcement-learning
