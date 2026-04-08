@@ -51,9 +51,9 @@ def _results_match(actual: list[dict], expected: list[dict]) -> tuple[bool, floa
     - 0.0: Completely wrong or error
     """
     if not actual and not expected:
-        return True, 1.0
+        return True, 0.99
     if not actual or not expected:
-        return False, 0.0
+        return False, 0.01
 
     norm_actual = _normalize_results(actual)
     norm_expected = _normalize_results(expected)
@@ -66,11 +66,11 @@ def _results_match(actual: list[dict], expected: list[dict]) -> tuple[bool, floa
     expected_set = set(row_to_tuple(r) for r in norm_expected)
 
     if actual_set == expected_set:
-        return True, 1.0
+        return True, 0.99
 
     # Partial scoring based on row overlap
     if len(expected_set) == 0:
-        return False, 0.0
+        return False, 0.01
 
     matching_rows = actual_set & expected_set
     row_overlap = len(matching_rows) / len(expected_set)
@@ -85,9 +85,9 @@ def _results_match(actual: list[dict], expected: list[dict]) -> tuple[bool, floa
 
     col_match = len(actual_cols & expected_cols) / max(len(expected_cols), 1)
 
-    # Combined partial score
+    # Combined partial score, clamped to strict (0, 1) range
     partial = round(0.6 * row_overlap + 0.4 * col_match, 2)
-    partial = min(partial, 0.9)  # Cap at 0.9 for non-exact matches
+    partial = max(0.01, min(partial, 0.89))
 
     return False, partial
 
@@ -168,7 +168,7 @@ class SQLQueryEnvironment(Environment):
         if self._current_task is None:
             return SQLObservation(
                 done=False,
-                reward=0.0,
+                reward=0.01,
                 error_message="No active episode. Call /reset first.",
                 feedback="You must reset the environment before stepping.",
             )
@@ -183,7 +183,7 @@ class SQLQueryEnvironment(Environment):
         if not query.upper().startswith("SELECT"):
             return SQLObservation(
                 done=False,
-                reward=0.0,
+                reward=0.01,
                 task_id=task["task_id"],
                 difficulty=task["difficulty"],
                 question=task["question"],
@@ -206,7 +206,7 @@ class SQLQueryEnvironment(Environment):
                 return self._fail_task(task, error_msg)
             return SQLObservation(
                 done=False,
-                reward=0.0,
+                reward=0.01,
                 task_id=task["task_id"],
                 difficulty=task["difficulty"],
                 question=task["question"],
@@ -229,12 +229,12 @@ class SQLQueryEnvironment(Environment):
         difficulty_multiplier = {"easy": 1.0, "medium": 1.0, "hard": 1.0}
         reward = partial_score * difficulty_multiplier[task["difficulty"]]
 
-        # Determine attempt efficiency bonus
+        # Determine attempt efficiency bonus (scores strictly between 0 and 1)
         if exact_match and self._attempts_used == 1:
-            reward = 1.0  # Perfect score for first-try correct
+            reward = 0.99  # Best score for first-try correct
         elif exact_match:
             # Small penalty for needing multiple attempts
-            reward = max(0.7, 1.0 - 0.1 * (self._attempts_used - 1))
+            reward = max(0.7, 0.99 - 0.1 * (self._attempts_used - 1))
 
         remaining = self._max_attempts - self._attempts_used
 
@@ -330,7 +330,7 @@ class SQLQueryEnvironment(Environment):
                 attempts_used=self._attempts_used,
             )
 
-    def _fail_task(self, task, error_msg="", actual=None, expected=None, partial_score=0.0):
+    def _fail_task(self, task, error_msg="", actual=None, expected=None, partial_score=0.01):
         """Handle task failure (out of attempts) and move to next task."""
         self._state.cumulative_reward += partial_score
 

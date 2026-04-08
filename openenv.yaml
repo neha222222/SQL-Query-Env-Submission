@@ -8,3 +8,19 @@ tags:
   - natural-language-to-sql
   - text-to-sql
   - reinforcement-learning
+
+tasks:
+  - id: easy_1
+    name: "Basic SELECT with WHERE and ORDER BY"
+    difficulty: easy
+    description: "List employees in a department ordered by salary"
+
+  - id: medium_1
+    name: "JOIN with GROUP BY aggregation"
+    difficulty: medium
+    description: "Calculate total revenue per category from completed orders"
+
+  - id: hard_1
+    name: "Correlated subquery"
+    difficulty: hard
+    description: "Find highest-paid employee per department"

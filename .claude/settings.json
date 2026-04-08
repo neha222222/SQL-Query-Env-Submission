@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh repo:*)",
+      "Bash(gh api:*)",
+      "Bash(GIT_COMMITTER_NAME=\"neha222222\" GIT_COMMITTER_EMAIL=\"neha222222@users.noreply.github.com\" git commit -m \"handle step before reset gracefully\" --author=\"neha222222 <neha222222@users.noreply.github.com>\")",
+      "Bash(/Users/vandit/.pyenv/versions/3.13.3/bin/python -c ':*)",
+      "Bash(GIT_COMMITTER_NAME=\"neha222222\" GIT_COMMITTER_EMAIL=\"neha222222@users.noreply.github.com\" git commit -m \"fix inference.py env vars to match submission requirements\" --author=\"neha222222 <neha222222@users.noreply.github.com>\")",
+      "Bash(curl -s -w \"\\\\nHTTP_CODE: %{http_code}\" https://neha222222-sql-query-env.hf.space/schema)",
+      "Bash(/Users/vandit/.pyenv/versions/3.13.3/bin/python -m openenv --help)",
+      "Bash(uv lock:*)",
+      "Bash(GIT_COMMITTER_NAME=\"neha222222\" GIT_COMMITTER_EMAIL=\"neha222222@users.noreply.github.com\" git commit -m \"add server entry point and uv.lock for openenv validate\" --author=\"neha222222 <neha222222@users.noreply.github.com>\")",
+      "Bash(GIT_COMMITTER_NAME=\"neha222222\" GIT_COMMITTER_EMAIL=\"neha222222@users.noreply.github.com\" git commit -m \"fix reward scores to strict \\(0,1\\) range and add tasks to openenv.yaml\" --author=\"neha222222 <neha222222@users.noreply.github.com>\")"
+    ]
+  }
+}
