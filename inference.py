@@ -2,13 +2,9 @@
 """
 Baseline inference script for the SQL Query Environment.
 
-This script demonstrates an AI agent interacting with the SQL Query
-Environment using an LLM to generate SQL queries from natural language
-questions.
-
 Required environment variables:
-  - API_BASE_URL: LLM API endpoint (e.g., https://api.openai.com/v1)
-  - MODEL_NAME: Model identifier (e.g., gpt-4o-mini)
+  - API_BASE_URL: LLM API endpoint
+  - MODEL_NAME: Model identifier
   - HF_TOKEN: Hugging Face API token
 
 Usage:
@@ -89,8 +85,9 @@ def run_inference():
 
     # Reset environment
     obs = env.reset()
-    total_reward = 0.0
     total_steps = 0
+    task_scores = {}
+    current_task_id = obs.task_id
 
     print("[STEP]")
     print(json.dumps({
@@ -135,8 +132,16 @@ def run_inference():
         obs = env.step(action)
         total_steps += 1
 
+        # Track task score when task changes or episode ends
         if obs.reward is not None:
-            total_reward += obs.reward
+            task_scores[current_task_id] = max(
+                task_scores.get(current_task_id, 0.01),
+                obs.reward if obs.reward > 0 else 0.01
+            )
+
+        # Detect task change
+        if obs.task_id != current_task_id:
+            current_task_id = obs.task_id
 
         print("[STEP]")
         print(json.dumps({
@@ -145,6 +150,7 @@ def run_inference():
             "difficulty": obs.difficulty,
             "query": sql_query,
             "reward": obs.reward,
+            "score": obs.reward,
             "done": obs.done,
             "feedback": obs.feedback,
             "error": obs.error_message or None,
@@ -154,14 +160,26 @@ def run_inference():
         if "Moving to task" in obs.feedback or "Correct!" in obs.feedback:
             messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
-    # Final summary
+    # Make sure all scores are strictly in (0, 1) with clean rounding
+    for task_id in task_scores:
+        task_scores[task_id] = round(max(0.01, min(0.99, task_scores[task_id])), 2)
+
+    # Build tasks list for the END block
+    tasks_output = []
+    for task_id, score in task_scores.items():
+        tasks_output.append({
+            "task_id": task_id,
+            "score": score,
+        })
+
     print("[END]")
     print(json.dumps({
         "status": "completed",
         "total_steps": total_steps,
         "final_reward": obs.reward,
-        "total_reward": total_reward,
-        "feedback": obs.feedback,
+        "tasks": tasks_output,
+        "num_tasks": len(tasks_output),
+        "scores": {tid: s for tid, s in task_scores.items()},
     }, default=str))
 
     env.close()
