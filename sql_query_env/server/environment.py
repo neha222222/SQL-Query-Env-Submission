@@ -12,7 +12,7 @@ from sql_query_env.server.tasks import SCHEMA_DDL, SEED_DATA, SCHEMA_DESCRIPTION
 
 def _create_db() -> sqlite3.Connection:
     """Create an in-memory SQLite database with the schema and seed data."""
-    conn = sqlite3.connect(":memory:")
+    conn = sqlite3.connect(":memory:", check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA_DDL)
     conn.executescript(SEED_DATA)
