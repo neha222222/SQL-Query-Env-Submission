@@ -27,16 +27,16 @@ from sql_query_env.models import SQLAction
 
 # ─── Configuration ───────────────────────────────────────────────────────────
 
-API_BASE_URL = os.environ.get("API_BASE_URL", "https://api.openai.com/v1")
-MODEL_NAME = os.environ.get("MODEL_NAME", "gpt-4o-mini")
-HF_TOKEN = os.environ.get("HF_TOKEN", "")
+API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
+MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
+HF_TOKEN = os.getenv("HF_TOKEN")
 
 
 def get_llm_client() -> OpenAI:
     """Create an OpenAI-compatible client."""
     return OpenAI(
         base_url=API_BASE_URL,
-        api_key=HF_TOKEN or os.environ.get("OPENAI_API_KEY", ""),
+        api_key=HF_TOKEN,
     )
 
 
