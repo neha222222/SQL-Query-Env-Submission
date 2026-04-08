@@ -1,3 +1,4 @@
+
 # SQL Query Environment for OpenEnv
 
 An OpenEnv-compliant reinforcement learning environment that trains AI agents to write correct SQL queries from natural language questions. The agent interacts with a realistic relational database containing employees, products, orders, and customers.
@@ -82,7 +83,113 @@ class SQLState(State):
 | SQL error or completely wrong | 0.0 |
 | Final episode reward | Average across all tasks |
 
-## Quickstart
+## Live API (Hugging Face Space)
+
+The environment is deployed at: **https://neha222222-sql-query-env.hf.space**
+
+### Available Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/reset` | Start a new episode, returns the first task |
+| `POST` | `/step` | Submit a SQL query, get feedback and reward |
+| `GET` | `/state` | Get current environment state |
+| `GET` | `/health` | Health check (`{"status": "healthy"}`) |
+| `GET` | `/schema` | Get JSON schemas for action/observation models |
+| `GET` | `/metadata` | Environment metadata |
+| `GET` | `/docs` | Interactive Swagger UI |
+| `POST` | `/mcp` | MCP JSON-RPC endpoint (for tool-calling agents) |
+| `WS` | `/ws` | WebSocket for persistent sessions |
+
+### Testing with curl
+
+**1. Health check**
+```bash
+curl https://neha222222-sql-query-env.hf.space/health
+# {"status": "healthy"}
+```
+
+**2. Reset the environment (start a new episode)**
+```bash
+curl -X POST https://neha222222-sql-query-env.hf.space/reset \
+  -H 'Content-Type: application/json' \
+  -d '{}'
+```
+
+**3. Submit a SQL query**
+```bash
+curl -X POST https://neha222222-sql-query-env.hf.space/step \
+  -H 'Content-Type: application/json' \
+  -d '{"action": {"query": "SELECT name, salary FROM employees WHERE department = '\''Engineering'\'' ORDER BY salary DESC"}}'
+```
+
+**4. Check current state**
+```bash
+curl https://neha222222-sql-query-env.hf.space/state
+```
+
+**5. Get action/observation schemas**
+```bash
+curl https://neha222222-sql-query-env.hf.space/schema
+```
+
+**6. MCP endpoint (for tool-calling agents)**
+```bash
+curl -X POST https://neha222222-sql-query-env.hf.space/mcp \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc": "2.0", "method": "initialize", "id": 1}'
+```
+> Note: The `/mcp` endpoint expects valid JSON-RPC 2.0 requests. Sending an empty body returns `{"error": {"code": -32700, "message": "Parse error"}}` which is the correct JSON-RPC error for malformed input.
+
+### Testing with Python
+
+```python
+import requests
+
+BASE = "https://neha222222-sql-query-env.hf.space"
+
+# Reset
+resp = requests.post(f"{BASE}/reset", json={})
+obs = resp.json()
+print(obs["observation"]["question"])
+print(obs["observation"]["schema_description"])
+
+# Step - submit a query
+resp = requests.post(f"{BASE}/step", json={
+    "action": {"query": "SELECT name, salary FROM employees WHERE department = 'Engineering' ORDER BY salary DESC"}
+})
+result = resp.json()
+print(f"Reward: {result['reward']}")
+print(f"Feedback: {result['observation']['feedback']}")
+print(f"Done: {result['done']}")
+```
+
+### Testing with WebSocket (persistent session)
+
+```python
+import asyncio
+import json
+import websockets
+
+async def test_ws():
+    async with websockets.connect("wss://neha222222-sql-query-env.hf.space/ws") as ws:
+        # Reset
+        await ws.send(json.dumps({"type": "reset"}))
+        obs = json.loads(await ws.recv())
+        print(f"Task: {obs['observation']['question']}")
+
+        # Step
+        await ws.send(json.dumps({
+            "type": "step",
+            "action": {"query": "SELECT name, salary FROM employees WHERE department = 'Engineering' ORDER BY salary DESC"}
+        }))
+        result = json.loads(await ws.recv())
+        print(f"Reward: {result['reward']}")
+
+asyncio.run(test_ws())
+```
+
+## Quickstart (Local Development)
 
 ### Install dependencies
 
@@ -112,14 +219,14 @@ print(obs.feedback)  # "Correct! Reward: 1.00. Moving to task 2/3..."
 ### Run as a server
 
 ```bash
-uvicorn sql_query_env.server.app:app --host 0.0.0.0 --port 8000
+uvicorn sql_query_env.server.app:app --host 0.0.0.0 --port 7860
 ```
 
 ### Run with Docker
 
 ```bash
 docker build -t sql-query-env .
-docker run -p 8000:8000 sql-query-env
+docker run -p 7860:7860 sql-query-env
 ```
 
 ### Run baseline inference
@@ -169,6 +276,3 @@ python inference.py
 - **Framework**: OpenEnv Core + FastAPI + Pydantic
 - **Concurrency**: Supports concurrent sessions
 
-## License
-
-MIT
