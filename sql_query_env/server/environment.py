@@ -165,6 +165,14 @@ class SQLQueryEnvironment(Environment):
 
     def step(self, action: SQLAction, timeout_s=None, **kwargs) -> SQLObservation:
         """Execute the agent's SQL query and evaluate it."""
+        if self._current_task is None:
+            return SQLObservation(
+                done=False,
+                reward=0.0,
+                error_message="No active episode. Call /reset first.",
+                feedback="You must reset the environment before stepping.",
+            )
+
         self._state.step_count += 1
         self._attempts_used += 1
 
