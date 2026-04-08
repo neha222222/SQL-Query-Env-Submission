@@ -21,8 +21,11 @@ dependencies = [
     "openai>=1.0.0",
 ]
 
+[project.scripts]
+server = "server.app:main"
+
 [project.urls]
 Homepage = "https://github.com/neha222222/sql-query-env"
 
 [tool.setuptools.packages.find]
-include = ["sql_query_env*"]
+include = ["sql_query_env*", "server*"]
