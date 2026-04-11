@@ -14,13 +14,25 @@ tasks:
     name: "Basic SELECT with WHERE and ORDER BY"
     difficulty: easy
     description: "List employees in a department ordered by salary"
+    grader: sql_query_env.server.environment:SQLQueryEnvironment
+    scoring:
+      min: 0.01
+      max: 0.99
 
   - id: medium_1
     name: "JOIN with GROUP BY aggregation"
     difficulty: medium
     description: "Calculate total revenue per category from completed orders"
+    grader: sql_query_env.server.environment:SQLQueryEnvironment
+    scoring:
+      min: 0.01
+      max: 0.99
 
   - id: hard_1
     name: "Correlated subquery"
     difficulty: hard
     description: "Find highest-paid employee per department"
+    grader: sql_query_env.server.environment:SQLQueryEnvironment
+    scoring:
+      min: 0.01
+      max: 0.99

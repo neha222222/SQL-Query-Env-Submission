@@ -276,6 +276,7 @@ class SQLQueryEnvironment(Environment):
 
     def _succeed_task(self, task, actual, expected, reward):
         """Handle successful task completion and move to next task."""
+        reward = round(max(0.01, min(0.99, reward)), 2)
         self._state.tasks_completed += 1
         self._state.cumulative_reward += reward
 
@@ -309,8 +310,8 @@ class SQLQueryEnvironment(Environment):
                 attempts_used=0,
             )
         else:
-            # All tasks completed
-            avg_reward = self._state.cumulative_reward / len(self._task_list)
+            # All tasks completed — clamp to strict (0, 1)
+            avg_reward = round(max(0.01, min(0.99, self._state.cumulative_reward / len(self._task_list))), 2)
             return SQLObservation(
                 done=True,
                 reward=avg_reward,
@@ -332,6 +333,7 @@ class SQLQueryEnvironment(Environment):
 
     def _fail_task(self, task, error_msg="", actual=None, expected=None, partial_score=0.01):
         """Handle task failure (out of attempts) and move to next task."""
+        partial_score = round(max(0.01, min(0.99, partial_score)), 2)
         self._state.cumulative_reward += partial_score
 
         # Execute reference to show expected
@@ -366,7 +368,7 @@ class SQLQueryEnvironment(Environment):
                 attempts_used=0,
             )
         else:
-            avg_reward = self._state.cumulative_reward / len(self._task_list)
+            avg_reward = round(max(0.01, min(0.99, self._state.cumulative_reward / len(self._task_list))), 2)
             return SQLObservation(
                 done=True,
                 reward=avg_reward,
