@@ -129,35 +129,36 @@ def run_inference():
 
         # Step the environment
         action = SQLAction(query=sql_query)
+        prev_task_id = current_task_id
         obs = env.step(action)
         total_steps += 1
 
-        # Track task score when task changes or episode ends
-        if obs.reward is not None:
-            task_scores[current_task_id] = max(
-                task_scores.get(current_task_id, 0.01),
-                obs.reward if obs.reward > 0 else 0.01
-            )
+        # Clamp reward to strict (0, 1)
+        step_score = round(max(0.01, min(0.99, obs.reward)), 2) if obs.reward is not None else 0.01
 
-        # Detect task change
-        if obs.task_id != current_task_id:
-            current_task_id = obs.task_id
+        # Track task score — attribute to the task that was just graded
+        task_scores[prev_task_id] = max(
+            task_scores.get(prev_task_id, 0.01),
+            step_score
+        )
 
+        # Report score for the task that was just graded (prev_task_id)
         print("[STEP]")
         print(json.dumps({
             "step": total_steps,
-            "task_id": obs.task_id,
+            "task_id": prev_task_id,
             "difficulty": obs.difficulty,
             "query": sql_query,
-            "reward": obs.reward,
-            "score": obs.reward,
+            "reward": step_score,
+            "score": step_score,
             "done": obs.done,
             "feedback": obs.feedback,
             "error": obs.error_message or None,
         }, default=str))
 
-        # If task changed (new question), reset conversation context
-        if "Moving to task" in obs.feedback or "Correct!" in obs.feedback:
+        # Detect task change
+        if obs.task_id != current_task_id:
+            current_task_id = obs.task_id
             messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
     # Make sure all scores are strictly in (0, 1) with clean rounding
